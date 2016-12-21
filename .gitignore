@@ -5,6 +5,7 @@
 *.obj
 *.db-shm
 *.DS_Store
+*.json
 
 # Precompiled Headers
 *.gch
