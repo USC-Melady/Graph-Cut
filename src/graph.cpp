@@ -45,10 +45,10 @@ void Graph::preallocate()
 
     parent2child.resize(nNodes);
     parents.resize(nNodes);
-    parentsAfterMerge.resize(nNodes);
+    // parentsAfterMerge.resize(nNodes);
     for (int i = 0; i < nNodes; i++)
     {
-        parentsAfterMerge[i] = i;
+        // parentsAfterMerge[i] = i;
         parents[i] = i;
         parent2child[i].push_back(i);
     }
@@ -60,9 +60,19 @@ void Graph::preallocate()
     L = unordered_set<int>();
     u2wL.resize(nNodes);
     wL2u = new MaxHeap(nNodes);
-    toMerge = vector<pair<int, int>>();
+    UFAfterMerge.preallocate(nNodes, verbose);
 }
 
+void Graph::UnionFindAfterMerge::preallocate(int nNodes, int _verbose)
+{
+    verbose = _verbose;
+    toMerge.clear();
+    parentsAfterMerge.resize(nNodes);
+    for (int i = 0; i < nNodes; i++)
+    {
+        parentsAfterMerge[i] = i;
+    }
+}
 void Graph::addEdge(const int u, const int v, const WTYPE weight)
 {
     if (u != v && u >= 0 && v >= 0 && u < nNodes && v < nNodes && weight > 0)
@@ -253,9 +263,9 @@ void Graph::getKCC()
     depth = 0;
     while (true)
     {
+        UFAfterMerge.preallocate(nNodes, verbose);
         for (int i = 0; i < nNodes; i++)
         {
-            parentsAfterMerge[i] = i;
             parents[i] = i;
             parent2child[i].push_back(i);
         }
@@ -304,11 +314,11 @@ int Graph::kCut(int &seed, int &ncomp)
                  << "\tEarly Merging:\t" << earlyMergingCnt << endl;
         }
 
-        toMerge.clear();
+        UFAfterMerge.toMerge.clear();
 
         int status = kMas(seed, ncomp);
         if (verbose)
-            cout << "Early Merging Count:\t" << toMerge.size() << "\nStatus:\t" << status << endl;
+            cout << "Early Merging Count:\t" << UFAfterMerge.toMerge.size() << "\nStatus:\t" << status << endl;
         // end of KCut remove cut
         if (status == -3) //add L to return
         {
@@ -420,10 +430,10 @@ void Graph::removeCutL()
 int Graph::mergeAll(int &ncomp)
 {
     int seed;
-    while (!toMerge.empty())
+    while (!UFAfterMerge.toMerge.empty())
     {
         if (verbose > 1)
-            cout << "Remaining pairs to merge:\t" << toMerge.size() << endl;
+            cout << "Remaining pairs to merge:\t" << UFAfterMerge.toMerge.size() << endl;
 
         int status = mergeNodes();
         if (status >= 0)
@@ -469,7 +479,7 @@ int Graph::kMas(int &prevNode, int &currNNode)
         int MA = wL2u->getMaxKey();
         int weight = wL2u->getMax();
         if (weight >= K)
-            recordMerge(MA, prevNode);
+            UFAfterMerge.recordMerge(MA, prevNode);
 
         if (verbose > 2)
         {
@@ -494,7 +504,7 @@ int Graph::kMas(int &prevNode, int &currNNode)
             weight = wL2u->getMax();
             if (verbose > 2)
                 cout << "kMas++: add:\t" << MA << endl;
-            recordMerge(MA, prevNode);
+            UFAfterMerge.recordMerge(MA, prevNode);
             nMerge++;
             prevNode = MA;
 
@@ -540,7 +550,7 @@ int Graph::kMas(int &prevNode, int &currNNode)
     }
     return 0;
 }
-void Graph::mergeParentsAfterMerge(const int v, const int u)
+void Graph::UnionFindAfterMerge::mergeParentsAfterMerge(const int v, const int u)
 {
     int p1 = findParentsAfterMerge(v);
     int p2 = findParentsAfterMerge(u);
@@ -549,7 +559,8 @@ void Graph::mergeParentsAfterMerge(const int v, const int u)
         parentsAfterMerge[p1] = p2;
     }
 }
-int Graph::findParentsAfterMerge(const int v)
+
+int Graph::UnionFindAfterMerge::findParentsAfterMerge(const int v)
 {
     if (parentsAfterMerge[v] == v)
         return v;
@@ -564,8 +575,8 @@ int Graph::findParentsAfterMerge(const int v)
 // return other; the remaining node
 int Graph::mergeNodes()
 {
-    auto top = toMerge.back();
-    toMerge.pop_back();
+    auto top = UFAfterMerge.toMerge.back();
+    UFAfterMerge.toMerge.pop_back();
 
     int v = top.first;
     int u = top.second;
@@ -601,7 +612,7 @@ int Graph::mergeNodes()
             continue;
         adjMatrix_kcut[v][node] += weight;
         if (adjMatrix_kcut[v][node] >= K && forceC)
-            recordMerge(v, node);
+            UFAfterMerge.recordMerge(v, node);
 
         adjMatrix_kcut[node].erase(u);
         adjMatrix_kcut[node][v] += weight;
@@ -610,7 +621,7 @@ int Graph::mergeNodes()
     return v;
 }
 
-void Graph::recordMerge(const int u, const int v)
+void Graph::UnionFindAfterMerge::recordMerge(const int u, const int v)
 {
     if (findParentsAfterMerge(u) == findParentsAfterMerge(v))
         return;

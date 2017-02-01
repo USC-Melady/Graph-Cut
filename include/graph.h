@@ -65,7 +65,7 @@ class Graph
 
     int kCut(int &currNNode, int &prevNode);
     int kMas(int &seed, int &currNNode);
-    void recordMerge(const int u, const int v);
+
     int mergeAll(int &ncomp);
     int findParent(const int v);
     int mergeNodes();
@@ -73,9 +73,6 @@ class Graph
     void addLtoRet();
     void getNodesInL(vector<int> &nodeInL);
     void getNodesInL(unordered_set<int> &nodeInL);
-
-    // variable for KCC
-    vector<pair<int, int>> toMerge;
 
     void addEdge(const int u, const int v, const WTYPE weight = 1);
 
@@ -89,13 +86,27 @@ class Graph
     vector<int> node2degree;
     vector<list<int>> parent2child;
     vector<int> parents;
-    vector<int> parentsAfterMerge;
-    void mergeParentsAfterMerge(const int v, const int u);
-    int findParentsAfterMerge(const int v);
+
     vector<bool> merged;
     unordered_set<int> L;
     vector<bool> bfsMark;
     vector<WTYPE> u2wL;
+
+    struct UnionFindAfterMerge
+    {
+        UnionFindAfterMerge(){};
+        int verbose;
+        void preallocate(int nNodes, int verbose);
+
+        // variable for KCC
+        vector<pair<int, int>> toMerge;
+        vector<int> parentsAfterMerge;
+        void recordMerge(const int u, const int v);
+
+        void mergeParentsAfterMerge(const int v, const int u);
+        int findParentsAfterMerge(const int v);
+
+    } UFAfterMerge;
 
     // heap
     struct MaxHeap //miniheap
