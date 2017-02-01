@@ -120,7 +120,7 @@ void Graph::KCoreOptimization()
 
     for (int i = 0; i < nNodes; i++)
     {
-        if (node2degree[i] < K)
+        if (node2degree[i] < K && !adjMatrix_graph[i].empty())
             tmpNode2RM.push_back(i);
     }
 
