@@ -51,14 +51,18 @@ class Graph
     // Utils for KCore
     static void fixDegree(
         const vector<unordered_map<int, WTYPE>> &adjMatrix_graph,
-        vector<int> &node2degree,
+        vector<WTYPE> &node2degree,
         const int verbose);
 
-    void editDegree(const int node, const WTYPE delta);
-    void returnConnectedComp();
-
     // Utils for KCC
-    vector<pair<int, int>> getConnectedComp();
+    static void getConnectedComp(
+        vector<pair<int, int>> &seedNSize,
+        const vector<unordered_map<int, WTYPE>> &adjMatrix_graph,
+        vector<bool> &bfsMark,
+        vector<vector<int>> &kCC,
+        const bool returnKCC,
+        const int verbose);
+
     int kCut(int &currNNode, int &prevNode);
     int kMas(int &seed, int &currNNode);
     void recordMerge(const int u, const int v);
@@ -82,7 +86,6 @@ class Graph
 
     // Pre-allocated Variables
     void preallocate();
-    // set<pair<WTYPE, int>> weight_node;test
     vector<int> node2degree;
     vector<list<int>> parent2child;
     vector<int> parents;

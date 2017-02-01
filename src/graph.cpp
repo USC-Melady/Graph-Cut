@@ -54,7 +54,6 @@ void Graph::preallocate()
     }
 
     node2degree.resize(nNodes);
-    // weight_node = set<pair<WTYPE, int>>();
 
     bfsMark.resize(nNodes, false);
 
@@ -159,7 +158,7 @@ void Graph::KCoreOptimization(
 
 void Graph::fixDegree(
     const vector<unordered_map<int, WTYPE>> &adjMatrix_graph,
-    vector<int> &node2degree,
+    vector<WTYPE> &node2degree,
     const int verbose)
 {
     Timer tm;
@@ -179,38 +178,33 @@ void Graph::fixDegree(
         cout << "Time to fix degree:\t" << tm.CheckTimer() << endl;
 }
 
-void Graph::editDegree(const int node, const WTYPE delta)
-{
-    if (delta == 0)
-        return;
-
-    WTYPE oldweight = node2degree[node];
-    // if (oldweight != 0)
-    //     weight_node.erase(make_pair(oldweight, node));
-    if (oldweight + delta < -EPS)
-        cout << "can not decrease degree to negative!" << endl;
-    node2degree[node] += delta;
-    // if (oldweight + delta > EPS)
-    //     weight_node.insert(make_pair(oldweight + delta, node));
-}
-
-vector<pair<int, int>> Graph::getConnectedComp()
+void Graph::getConnectedComp(
+    vector<pair<int, int>> &seedNSize,
+    const vector<unordered_map<int, WTYPE>> &adjMatrix_graph,
+    vector<bool> &bfsMark,
+    vector<vector<int>> &kCC,
+    const bool returnKCC,
+    const int verbose)
 {
     Timer tm;
-    vector<pair<int, int>> seedNSize;
-    fill(bfsMark.begin(), bfsMark.end(), false);
+    int nNodes = adjMatrix_graph.size();
+    if (nNodes <= 0)
+        return;
+    if (returnKCC)
+        kCC.clear();
+    seedNSize.clear();
+    fill(begin(bfsMark), end(bfsMark), false);
+
     for (int i = 0; i < nNodes; i++)
     {
-        if (bfsMark[i])
-        {
-            continue;
-        }
-        else if (adjMatrix_graph[i].empty())
+        if (bfsMark[i] || adjMatrix_graph[i].empty())
         {
             bfsMark[i] = true;
         }
         else
         {
+            if (returnKCC)
+                kCC.push_back(vector<int>());
             int seed = i;
             bfsMark[i] = true;
             int ncomp = 1;
@@ -219,6 +213,8 @@ vector<pair<int, int>> Graph::getConnectedComp()
             while (!s.empty())
             {
                 int curr = s.top();
+                if (returnKCC)
+                    kCC.back().push_back(curr);
                 s.pop();
                 for (auto &p : adjMatrix_graph[curr])
                 {
@@ -236,45 +232,7 @@ vector<pair<int, int>> Graph::getConnectedComp()
     }
     if (verbose)
         cout << "Time to getConnected Components:\t" << tm.CheckTimer() << endl;
-    return seedNSize;
-}
-
-void Graph::returnConnectedComp()
-{
-    kCC.clear();
-    fill(bfsMark.begin(), bfsMark.end(), false);
-    for (int i = 0; i < nNodes; i++)
-    {
-        if (bfsMark[i] || adjMatrix_graph[i].empty())
-        {
-            bfsMark[i] = true;
-        }
-        else
-        {
-            kCC.push_back(vector<int>());
-            int seed = i;
-            bfsMark[i] = true;
-            int ncomp = 1;
-            stack<int> s;
-            s.push(i);
-            while (!s.empty())
-            {
-                int curr = s.top();
-                kCC.back().push_back(curr);
-                s.pop();
-                for (auto &p : adjMatrix_graph[curr])
-                {
-                    int next = p.first;
-                    if (!bfsMark[next])
-                    {
-                        s.push(next);
-                        bfsMark[next] = true;
-                        ncomp++;
-                    }
-                }
-            }
-        }
-    }
+    return;
 }
 
 void Graph::getKCore()
@@ -282,7 +240,8 @@ void Graph::getKCore()
     if (verbose)
         cout << "prepare K core" << endl;
     KCoreOptimization(K, adjMatrix_graph, node2degree, verbose);
-    returnConnectedComp();
+    vector<pair<int, int>> tmp;
+    getConnectedComp(tmp, adjMatrix_graph, bfsMark, kCC, true, verbose);
     if (verbose)
         cout << "return connected components" << endl;
     sortKCC();
@@ -306,7 +265,8 @@ void Graph::getKCC()
         KCoreOptimization(K, adjMatrix_graph, node2degree, verbose);
 
         // getConencted Components
-        auto seedNSize = getConnectedComp();
+        vector<pair<int, int>> seedNSize;
+        getConnectedComp(seedNSize, adjMatrix_graph, bfsMark, kCC, false, verbose);
         if (verbose)
             cout << "# of CC.:\t" << seedNSize.size() << endl;
 
