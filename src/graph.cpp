@@ -110,11 +110,18 @@ Graph::Graph(string filename, int _K) : K(_K)
     return;
 }
 
-void Graph::KCoreOptimization()
+void Graph::KCoreOptimization(
+    const int K,
+    vector<unordered_map<int, WTYPE>> &adjMatrix_graph,
+    vector<int> &node2degree,
+    const int verbose)
 {
     Timer tm;
-    fixDegree();
-    // unordered_map<int, int> node2delta;
+    int nNodes = adjMatrix_graph.size();
+    if (nNodes <= 0)
+        return;
+
+    fixDegree(adjMatrix_graph, node2degree, verbose);
 
     vector<int> tmpNode2RM;
 
@@ -150,17 +157,23 @@ void Graph::KCoreOptimization()
         cout << "Time to KCoreOptimization:\t" << tm.CheckTimer() << endl;
 }
 
-void Graph::fixDegree()
+void Graph::fixDegree(
+    const vector<unordered_map<int, WTYPE>> &adjMatrix_graph,
+    vector<int> &node2degree,
+    const int verbose)
 {
     Timer tm;
-    // weight_node.clear();
+    int nNodes = adjMatrix_graph.size();
+    if (nNodes <= 0)
+        return;
+    if (node2degree.size() != nNodes)
+        node2degree.assign(nNodes, 0);
+
     for (int i = 0; i < nNodes; i++)
     {
         node2degree[i] = 0;
         for (auto &p : adjMatrix_graph[i])
             node2degree[i] += p.second;
-        // if (node2degree[i])
-        //     weight_node.insert(make_pair(node2degree[i], i));
     }
     if (verbose)
         cout << "Time to fix degree:\t" << tm.CheckTimer() << endl;
@@ -268,7 +281,7 @@ void Graph::getKCore()
 {
     if (verbose)
         cout << "prepare K core" << endl;
-    KCoreOptimization();
+    KCoreOptimization(K, adjMatrix_graph, node2degree, verbose);
     returnConnectedComp();
     if (verbose)
         cout << "return connected components" << endl;
@@ -290,7 +303,7 @@ void Graph::getKCC()
         fill(u2wL.begin(), u2wL.end(), 0);
 
         depth++;
-        KCoreOptimization();
+        KCoreOptimization(K, adjMatrix_graph, node2degree, verbose);
 
         // getConencted Components
         auto seedNSize = getConnectedComp();

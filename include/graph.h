@@ -35,8 +35,12 @@ class Graph
     ~Graph() { delete wL2u; }
 
     int verbose;
-    //
-    void KCoreOptimization();
+    //ve
+    static void KCoreOptimization(
+        const int K,
+        vector<unordered_map<int, WTYPE>> &adjMatrix_graph,
+        vector<int> &node2degree,
+        const int verbose);
 
     //   private:
     int nNodes;
@@ -45,7 +49,11 @@ class Graph
     int depth = 0;
 
     // Utils for KCore
-    void fixDegree();
+    static void fixDegree(
+        const vector<unordered_map<int, WTYPE>> &adjMatrix_graph,
+        vector<int> &node2degree,
+        const int verbose);
+
     void editDegree(const int node, const WTYPE delta);
     void returnConnectedComp();
 
