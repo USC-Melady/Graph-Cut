@@ -16,7 +16,6 @@ using namespace std;
 
 typedef int WTYPE;
 const double EPS = 0.00000001;
-const int MAXSIZE = 10000000;
 
 class Graph
 {
@@ -66,8 +65,7 @@ class Graph
     // variable for KCC
     vector<pair<int, int>> toMerge;
 
-    void
-    addEdge(const int u, const int v, const WTYPE weight = 1);
+    void addEdge(const int u, const int v, const WTYPE weight = 1);
 
     // used for k-cut+
     vector<unordered_map<int, WTYPE>> adjMatrix_kcut;
@@ -76,15 +74,14 @@ class Graph
 
     // Pre-allocated Variables
     void preallocate();
-    set<pair<WTYPE, int>> weight_node;
+    // set<pair<WTYPE, int>> weight_node;test
     vector<int> node2degree;
     vector<list<int>> parent2child;
     vector<int> parents;
     vector<int> parentsAfterMerge;
     void mergeParentsAfterMerge(const int v, const int u);
     int findParentsAfterMerge(const int v);
-    vector<bool>
-        merged;
+    vector<bool> merged;
     unordered_set<int> L;
     vector<bool> bfsMark;
     vector<WTYPE> u2wL;

@@ -54,7 +54,7 @@ void Graph::preallocate()
     }
 
     node2degree.resize(nNodes);
-    weight_node = set<pair<WTYPE, int>>();
+    // weight_node = set<pair<WTYPE, int>>();
 
     bfsMark.resize(nNodes, false);
 
@@ -114,37 +114,36 @@ void Graph::KCoreOptimization()
 {
     Timer tm;
     fixDegree();
-    unordered_map<int, int> node2delta;
-    while (!weight_node.empty() && weight_node.begin()->first < K)
+    // unordered_map<int, int> node2delta;
+
+    vector<int> tmpNode2RM;
+
+    for (int i = 0; i < nNodes; i++)
     {
-        node2delta.clear();
-        while (!weight_node.empty() && weight_node.begin()->first < K)
+        if (node2degree[i] < K)
+            tmpNode2RM.push_back(i);
+    }
+
+    while (!tmpNode2RM.empty())
+    {
+        vector<int> newNode2RM;
+        for (auto &nodeRm : newNode2RM)
         {
 
-            int nodeRm = weight_node.begin()->second;
-            if (verbose > 2)
-                cout << "remove: " << nodeRm << " with wegiht " << weight_node.begin()->first << endl;
-            weight_node.erase(weight_node.begin());
-            node2degree[nodeRm] = 0;
-            // decreas the weight of affected nodes;
             for (const auto &edge : adjMatrix_graph[nodeRm])
             {
                 int weight = edge.second;
                 int NB = edge.first;
-                node2delta[NB] -= weight;
+                node2degree[NB] -= weight;
+                if (node2degree[NB] < K && node2degree[NB] + weight >= K)
+                    newNode2RM.push_back(NB);
                 // remove the opposite edge
                 adjMatrix_graph[NB].erase(nodeRm);
             }
+            node2degree[nodeRm] = 0;
             adjMatrix_graph[nodeRm].clear();
         }
-
-        for (auto const &p : node2delta)
-        {
-            int node = p.first;
-            int delta = p.second;
-            if (node2degree[node])
-                editDegree(node, delta);
-        }
+        tmpNode2RM = move(newNode2RM);
     }
 
     if (verbose)
@@ -154,14 +153,14 @@ void Graph::KCoreOptimization()
 void Graph::fixDegree()
 {
     Timer tm;
-    weight_node.clear();
+    // weight_node.clear();
     for (int i = 0; i < nNodes; i++)
     {
         node2degree[i] = 0;
         for (auto &p : adjMatrix_graph[i])
             node2degree[i] += p.second;
-        if (node2degree[i])
-            weight_node.insert(make_pair(node2degree[i], i));
+        // if (node2degree[i])
+        //     weight_node.insert(make_pair(node2degree[i], i));
     }
     if (verbose)
         cout << "Time to fix degree:\t" << tm.CheckTimer() << endl;
@@ -173,13 +172,13 @@ void Graph::editDegree(const int node, const WTYPE delta)
         return;
 
     WTYPE oldweight = node2degree[node];
-    if (oldweight != 0)
-        weight_node.erase(make_pair(oldweight, node));
+    // if (oldweight != 0)
+    //     weight_node.erase(make_pair(oldweight, node));
     if (oldweight + delta < -EPS)
         cout << "can not decrease degree to negative!" << endl;
     node2degree[node] += delta;
-    if (oldweight + delta > EPS)
-        weight_node.insert(make_pair(oldweight + delta, node));
+    // if (oldweight + delta > EPS)
+    //     weight_node.insert(make_pair(oldweight + delta, node));
 }
 
 vector<pair<int, int>> Graph::getConnectedComp()
