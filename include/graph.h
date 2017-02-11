@@ -66,6 +66,8 @@ class Graph
     int kCut(int &currNNode, int &prevNode);
     int kMas(int &seed, int &currNNode);
 
+    int earlyStop(const WTYPE currCut, const int currNNode, const int nMerge);
+
     int mergeAll(int &ncomp);
     int findParent(const int v);
     int mergeNodes();
@@ -92,6 +94,9 @@ class Graph
     vector<bool> bfsMark;
     vector<WTYPE> u2wL;
 
+    // note that this not consistent with the actual parenthood
+    // it is only guaranteed to be consistent with the membership
+    // after all pending merging operations complete.
     struct UnionFindAfterMerge
     {
         UnionFindAfterMerge(){};

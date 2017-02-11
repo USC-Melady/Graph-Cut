@@ -24,18 +24,20 @@ int main(int argc, char **argv)
     // g.addEdge(5, 6, 1);
     // g.addEdge(6, 7, 3);
 
-    g.verbose = 2;
-
+    g.verbose = 1;
+    Timer tm;
     g.getKCC();
-
+    if (g.verbose)
+        cout << "Time for KCC: " << tm.CheckTimer() << endl;
     cout << g.kCC.size() << endl;
     for (auto &v : g.kCC)
     {
-        for (auto &i : v)
-        {
-            cout << i << " ";
-        }
-        cout << endl;
+        cout << v.size() << endl;
+        // for (auto &i : v)
+        // {
+        //     cout << i << " ";
+        // }
+        // cout << endl;
     }
     return 0;
 }
