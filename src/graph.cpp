@@ -21,7 +21,7 @@ void Graph::sortKCC()
     sort(kCC.begin(), kCC.end());
 }
 
-Graph::Graph(int _nNode, int _K) : nNodes(_nNode), K(_K)
+Graph::Graph(int _nNode) : nNodes(_nNode)
 {
     preallocate();
 }
@@ -79,7 +79,7 @@ void Graph::addEdge(const int u, const int v, const WTYPE weight)
     }
 }
 
-Graph::Graph(vector<vector<int>> _edges, int _K) : K(_K)
+Graph::Graph(vector<vector<int>> _edges)
 {
     Timer tm;
     nNodes = 0;
@@ -98,7 +98,7 @@ Graph::Graph(vector<vector<int>> _edges, int _K) : K(_K)
     return;
 }
 
-Graph::Graph(string filename, int _K) : K(_K)
+Graph::Graph(string filename)
 {
     fstream fin;
     fin.open(filename.c_str());
@@ -247,8 +247,9 @@ void Graph::getConnectedComp(
     return;
 }
 
-void Graph::getKCore()
+void Graph::getKCore(const int _K)
 {
+    K = _K;
     if (verbose)
         cout << "prepare K core" << endl;
     KCoreOptimization(K, adjMatrix_graph, node2degree, verbose);
@@ -259,8 +260,9 @@ void Graph::getKCore()
     sortKCC();
 }
 
-void Graph::getKCC()
+void Graph::getKCC(const int _K)
 {
+    K = _K;
     Timer tm1;
     depth = 0;
     while (true)
@@ -321,7 +323,10 @@ int Graph::kCut(int &seed, int &ncomp)
 
         UFAfterMerge.toMerge.clear();
 
+        Timer tmForkMas;
         int status = kMas(seed, ncomp);
+        timeForKMas += tmForkMas.CheckTimer();
+
         if (verbose)
             cout << "Early Merging Count:\t" << UFAfterMerge.toMerge.size()
                  << "\nStatus:\t" << status
@@ -338,7 +343,10 @@ int Graph::kCut(int &seed, int &ncomp)
             return 0;
         }
 
+        Timer tmForMerge;
         int tmpSeed = mergeAll(ncomp);
+        timeForMerge += tmForMerge.CheckTimer();
+
         if (tmpSeed >= 0)
             seed = tmpSeed;
         if (status == 0 && ncomp > 1)
@@ -471,18 +479,17 @@ int Graph::earlyStop(const WTYPE currCut,
 // return -1 for non-valid input
 // return -2 for earlyStop and Remove Cut
 // return -3 for earlyStop and add L to KCC
-int Graph::kMas(int &prevNode, int &currNNode)
+int Graph::kMas(int &prevNode, const int currNNode)
 {
     if (currNNode <= 1)
         return -1;
 
+    L.clear();
     // prevNode from a node
     int nMerge = 0;
     int oldStartNode = prevNode;
     // set<pair<int, int>> wL2u;
     wL2u->size = 0;
-
-    L.clear();
     L.insert(prevNode);
 
     int currCut = 0;
@@ -495,18 +502,7 @@ int Graph::kMas(int &prevNode, int &currNNode)
         wL2u->insert(weight, node + 1);
     }
 
-    //TODO: modulize early stop
     // early stop
-    if (currCut < K && L.size() < currNNode)
-    {
-        // count number of merges in L
-        // remove the cut L vs V/L
-        if (nMerge + 1 == L.size() && L.size() > 1) // also add L to ret directly
-            return -3;
-        else
-            return -2;
-    }
-
     int earlyStopStatus;
     if ((earlyStopStatus = earlyStop(currCut, currNNode, nMerge)) != 0)
         return earlyStopStatus;
@@ -514,6 +510,7 @@ int Graph::kMas(int &prevNode, int &currNNode)
     while (L.size() < currNNode)
     {
         // find the next vertex to add;
+        cntVisit++;
         int MA = wL2u->getMaxKey();
         int weight = wL2u->getMax();
         if (weight >= K)
@@ -527,16 +524,20 @@ int Graph::kMas(int &prevNode, int &currNNode)
             cout << "u:\t" << MA << "\nw(L,u):\t" << weight << endl;
         }
 
-        unordered_set<int> toAdd;
-        toAdd.insert(MA);
+        vector<int> toAdd;
+        toAdd.push_back(MA);
+
+        // unordered_set<int> toAdd;
+        // toAdd.insert(MA);
         L.insert(MA);
+
         u2wL[MA] = 0;
         wL2u->removeMax();
         prevNode = MA;
 
         // if (verbose)
         //     cout << "wL2u->size\t" << wL2u->size << "\nwL2u->getMax()\t" << wL2u->getMax() << endl;
-        while (wL2u->size > 0 && wL2u->getMax() >= K)
+        while (batchM && wL2u->size > 0 && wL2u->getMax() >= K)
         {
             MA = wL2u->getMaxKey();
             weight = wL2u->getMax();
@@ -547,20 +548,20 @@ int Graph::kMas(int &prevNode, int &currNNode)
             prevNode = MA;
 
             L.insert(MA);
-            toAdd.insert(MA);
+            // toAdd.insert(MA);
+            toAdd.push_back(MA);
             wL2u->removeMax();
         }
 
         for (auto &MA : toAdd)
         {
-            u2wL[MA] = 0;
             for (auto &p : adjMatrix_kcut[MA])
             {
                 WTYPE weightTmp = p.second;
                 int node = p.first;
                 if (L.count(node))
                 {
-                    if (toAdd.count(node) == 0)
+                    if (!u2wL[MA])
                         currCut -= weightTmp;
                 }
                 else
@@ -574,6 +575,8 @@ int Graph::kMas(int &prevNode, int &currNNode)
                 }
             }
         }
+        for (auto &MA : toAdd)
+            u2wL[MA] = 0;
 
         // early stop
         if ((earlyStopStatus = earlyStop(currCut, currNNode, nMerge)) != 0)
@@ -621,8 +624,8 @@ int Graph::mergeNodes()
         // add to v
         if (weight == 0 || node == v)
             continue;
-        adjMatrix_kcut[v][node] += weight;
-        if (adjMatrix_kcut[v][node] >= K && forceC)
+        int tmpweight = (adjMatrix_kcut[v][node] += weight);
+        if (tmpweight >= K && forceC)
             UFAfterMerge.recordMerge(v, node);
 
         adjMatrix_kcut[node].erase(u);

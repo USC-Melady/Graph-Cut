@@ -23,19 +23,25 @@ class Graph
     // non-trival components to return
     vector<vector<int>> kCC;
     bool forceC = true;
+    bool batchM = true;
+    unsigned cntVisit = 0;
+    // unsigned cntKMasSave = 0;
 
-    void getKCC();
-    void getKCore();
+    double timeForKMas = 0;
+    double timeForMerge = 0;
+
+    void getKCC(const int _K);
+    void getKCore(const int _K);
 
     void sortKCC();
 
-    Graph(int _nNode, int _K);
-    Graph(string filename, int _K);
-    Graph(vector<vector<int>> _edges, int _K);
+    Graph(int _nNode);
+    Graph(string filename);
+    Graph(vector<vector<int>> _edges);
     ~Graph() { delete wL2u; }
 
     int verbose;
-    //ve
+
     static void KCoreOptimization(
         const int K,
         vector<unordered_map<int, WTYPE>> &adjMatrix_graph,
@@ -64,7 +70,7 @@ class Graph
         const int verbose);
 
     int kCut(int &currNNode, int &prevNode);
-    int kMas(int &seed, int &currNNode);
+    int kMas(int &seed, const int currNNode);
 
     int earlyStop(const WTYPE currCut, const int currNNode, const int nMerge);
 
