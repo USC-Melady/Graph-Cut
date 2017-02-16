@@ -99,7 +99,7 @@ class Graph
     unordered_set<int> L;
     vector<bool> bfsMark;
     vector<WTYPE> u2wL;
-
+    vector<int> uStats;
     // note that this not consistent with the actual parenthood
     // it is only guaranteed to be consistent with the membership
     // after all pending merging operations complete.

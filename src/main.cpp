@@ -24,23 +24,22 @@ int main(int argc, char **argv)
     // g.addEdge(5, 6, 1);
     // g.addEdge(6, 7, 3);
 
-    g.verbose = 1;
+    g.verbose = 0;
     Timer tm;
     g.forceC = stoi(argv[3]);
     g.batchM = stoi(argv[4]);
     g.getKCC(stoi(argv[2]));
-    if (g.verbose)
-        cout << "Time for KCC: " << tm.CheckTimer() << endl;
+    cout << "Time for KCC: " << tm.CheckTimer() << endl;
     cout << g.kCC.size() << endl;
-    // for (auto &v : g.kCC)
-    // {
-    //     cout << v.size() << endl;
-    //     // for (auto &i : v)
-    //     // {
-    //     //     cout << i << " ";
-    //     // }
-    //     // cout << endl;
-    // }
+    for (auto &v : g.kCC)
+    {
+        cout << v.size() << endl;
+        // for (auto &i : v)
+        // {
+        //     cout << i << " ";
+        // }
+        // cout << endl;
+    }
     cout << "Time for merge:\t" << g.timeForMerge << endl;
     cout << "Time for kMas:\t" << g.timeForKMas << endl;
     cout << "Number of Mas Visit:\t" << g.cntVisit << endl;

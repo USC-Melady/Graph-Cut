@@ -56,6 +56,7 @@ void Graph::preallocate()
 
     L = unordered_set<int>();
     u2wL.resize(nNodes);
+    uStats.resize(nNodes);
     wL2u = new MaxHeap(nNodes);
     UFAfterMerge.preallocate(nNodes, verbose);
 }
@@ -271,9 +272,11 @@ void Graph::getKCC(const int _K)
         for (int i = 0; i < nNodes; i++)
         {
             parents[i] = i;
+            parent2child[i].clear();
             parent2child[i].push_back(i);
         }
         fill(u2wL.begin(), u2wL.end(), 0);
+        fill(uStats.begin(), uStats.end(), 0);
 
         depth++;
         KCoreOptimization(K, adjMatrix_graph, node2degree, verbose);
@@ -488,9 +491,12 @@ int Graph::kMas(int &prevNode, const int currNNode)
     // prevNode from a node
     int nMerge = 0;
     int oldStartNode = prevNode;
+    u2wL[prevNode] = 0;
+
     // set<pair<int, int>> wL2u;
     wL2u->size = 0;
     L.insert(prevNode);
+    uStats[prevNode] = 1;
 
     int currCut = 0;
     for (auto &p : adjMatrix_kcut[prevNode])
@@ -498,7 +504,7 @@ int Graph::kMas(int &prevNode, const int currNNode)
         int node = p.first;
         WTYPE weight = p.second;
         currCut += weight;
-        u2wL[node] += weight;
+        u2wL[node] = weight;
         wL2u->insert(weight, node + 1);
     }
 
@@ -507,6 +513,7 @@ int Graph::kMas(int &prevNode, const int currNNode)
     if ((earlyStopStatus = earlyStop(currCut, currNNode, nMerge)) != 0)
         return earlyStopStatus;
 
+    vector<int> toAdd;
     while (L.size() < currNNode)
     {
         // find the next vertex to add;
@@ -524,19 +531,13 @@ int Graph::kMas(int &prevNode, const int currNNode)
             cout << "u:\t" << MA << "\nw(L,u):\t" << weight << endl;
         }
 
-        vector<int> toAdd;
         toAdd.push_back(MA);
-
-        // unordered_set<int> toAdd;
-        // toAdd.insert(MA);
-        L.insert(MA);
-
+        uStats[MA] = 2;
         u2wL[MA] = 0;
+
         wL2u->removeMax();
         prevNode = MA;
 
-        // if (verbose)
-        //     cout << "wL2u->size\t" << wL2u->size << "\nwL2u->getMax()\t" << wL2u->getMax() << endl;
         while (batchM && wL2u->size > 0 && wL2u->getMax() >= K)
         {
             MA = wL2u->getMaxKey();
@@ -547,25 +548,30 @@ int Graph::kMas(int &prevNode, const int currNNode)
             nMerge++;
             prevNode = MA;
 
-            L.insert(MA);
-            // toAdd.insert(MA);
             toAdd.push_back(MA);
+            uStats[MA] = 2;
+            u2wL[MA] = 0;
             wL2u->removeMax();
         }
 
+        // for (auto &&s : u2wL)
+        //     cout << s << " ";
+        // cout << endl;
         for (auto &MA : toAdd)
         {
+
             for (auto &p : adjMatrix_kcut[MA])
             {
                 WTYPE weightTmp = p.second;
                 int node = p.first;
-                if (L.count(node))
+                if (uStats[node] == 1)
                 {
-                    if (!u2wL[MA])
-                        currCut -= weightTmp;
+                    // cout << node << "-" << MA << endl;
+                    currCut -= weightTmp;
                 }
-                else
+                else if (uStats[node] == 0)
                 {
+                    // cout << node << "+" << MA << endl;
                     currCut += weightTmp;
                     if (u2wL[node] > 0)
                         wL2u->delEle(node + 1);
@@ -573,15 +579,35 @@ int Graph::kMas(int &prevNode, const int currNNode)
                     u2wL[node] += weightTmp;
                     wL2u->insert(u2wL[node], node + 1);
                 }
+                // if (L.count(node))
+                // {
+                //     if (!u2wL[node])
+                //         currCut -= weightTmp;
+                // }
+                // else
+                // {
+                //     currCut += weightTmp;
+                //     if (u2wL[node] > 0)
+                //         wL2u->delEle(node + 1);
+
+                //     u2wL[node] += weightTmp;
+                //     wL2u->insert(u2wL[node], node + 1);
+                // }
             }
         }
         for (auto &MA : toAdd)
-            u2wL[MA] = 0;
+        {
+            L.insert(MA);
+            uStats[MA] = 1;
+        }
 
+        toAdd.clear();
         // early stop
         if ((earlyStopStatus = earlyStop(currCut, currNNode, nMerge)) != 0)
             return earlyStopStatus;
     }
+    for (auto &&s : L)
+        uStats[s] = 0;
     return 0;
 }
 
