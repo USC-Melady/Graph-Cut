@@ -14,7 +14,7 @@
 
 using namespace std;
 
-typedef int WTYPE;
+typedef double WTYPE;
 const double EPS = 0.00000001;
 
 class Graph
@@ -45,7 +45,7 @@ class Graph
     static void KCoreOptimization(
         const WTYPE K,
         vector<unordered_map<int, WTYPE>> &adjMatrix_graph,
-        vector<int> &node2degree,
+        vector<WTYPE> &node2degree,
         const int verbose);
 
     //   private:
@@ -122,16 +122,15 @@ class Graph
     // heap
     struct MaxHeap //miniheap
     {
-        int *maxContents;      //from 1
+        WTYPE *maxContents;    //from 1
         int *maxElementToHeap; //from 1
-
         int *maxHeapToElement; //from 1
 
         int size;
         MaxHeap(int MAXSIZE)
         {
             size = 0;
-            maxContents = new int[MAXSIZE + 1];
+            maxContents = new WTYPE[MAXSIZE + 1];
             maxElementToHeap = new int[MAXSIZE + 1];
             maxHeapToElement = new int[MAXSIZE + 1];
         }
@@ -142,7 +141,7 @@ class Graph
             delete[] maxHeapToElement;
         }
 
-        void insert(int content, int order)
+        void insert(WTYPE content, int order)
         {
             size++;
             maxContents[size] = content;
@@ -152,8 +151,8 @@ class Graph
         }
 
         WTYPE getKey(int node) { return maxContents[maxElementToHeap[node]]; }
+        WTYPE getMax() { return maxContents[1]; }
 
-        int getMax() { return maxContents[1]; }
         int getMaxKey()
         {
             return maxHeapToElement[1] - 1;
@@ -215,7 +214,7 @@ class Graph
         void swap(int np, int parent)
         {
             //swap content
-            int temp;
+            WTYPE temp;
             temp = maxContents[parent];
             maxContents[parent] = maxContents[np];
             maxContents[np] = temp;
