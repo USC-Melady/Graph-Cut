@@ -118,9 +118,9 @@ Graph::Graph(string filename)
 }
 
 void Graph::KCoreOptimization(
-    const int K,
+    const WTYPE K,
     vector<unordered_map<int, WTYPE>> &adjMatrix_graph,
-    vector<int> &node2degree,
+    vector<WTYPE> &node2degree,
     const int verbose)
 {
     int rmCount = 0;
@@ -248,7 +248,7 @@ void Graph::getConnectedComp(
     return;
 }
 
-void Graph::getKCore(const int _K)
+void Graph::getKCore(const WTYPE _K)
 {
     K = _K;
     if (verbose)
@@ -261,7 +261,7 @@ void Graph::getKCore(const int _K)
     sortKCC();
 }
 
-void Graph::getKCC(const int _K)
+void Graph::getKCC(const WTYPE _K)
 {
     K = _K;
     Timer tm1;
@@ -394,7 +394,8 @@ void Graph::addLtoRet()
 {
     unordered_set<int> nodeInL;
     getNodesInL(nodeInL);
-    kCC.push_back(vector<int>{(int)(nodeInL.size())});
+    kCC.emplace_back(nodeInL.begin(), nodeInL.end());
+    // kCC.push_back(vector<int>{(int)(nodeInL.size())});
 
     for (auto &v : nodeInL)
     {

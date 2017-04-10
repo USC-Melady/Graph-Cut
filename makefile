@@ -36,5 +36,5 @@ clean:
 	rm ${OBJ_FILES}
 
 test:
-	./bin/main example/edges.txt 3
+	./bin/main ../example/edges.txt 0 4  1 1 
 

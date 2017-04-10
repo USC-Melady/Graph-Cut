@@ -30,8 +30,8 @@ class Graph
     double timeForKMas = 0;
     double timeForMerge = 0;
 
-    void getKCC(const int _K);
-    void getKCore(const int _K);
+    void getKCC(const WTYPE _K);
+    void getKCore(const WTYPE _K);
 
     void sortKCC();
 
@@ -43,14 +43,14 @@ class Graph
     int verbose;
 
     static void KCoreOptimization(
-        const int K,
+        const WTYPE K,
         vector<unordered_map<int, WTYPE>> &adjMatrix_graph,
         vector<int> &node2degree,
         const int verbose);
 
     //   private:
     int nNodes;
-    int K;
+    WTYPE K;
     // Algorithm Analytic
     int depth = 0;
 
@@ -91,7 +91,7 @@ class Graph
 
     // Pre-allocated Variables
     void preallocate();
-    vector<int> node2degree;
+    vector<WTYPE> node2degree;
     vector<list<int>> parent2child;
     vector<int> parents;
 
@@ -124,6 +124,7 @@ class Graph
     {
         int *maxContents;      //from 1
         int *maxElementToHeap; //from 1
+
         int *maxHeapToElement; //from 1
 
         int size;
