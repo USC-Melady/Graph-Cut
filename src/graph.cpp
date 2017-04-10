@@ -394,9 +394,9 @@ void Graph::addLtoRet()
 {
     unordered_set<int> nodeInL;
     getNodesInL(nodeInL);
-    kCC.emplace_back(nodeInL.begin(), nodeInL.end());
+    kCC.push_back(vector<int>{(int)(nodeInL.size())});
 
-    for (auto &v : kCC.back())
+    for (auto &v : nodeInL)
     {
         // remove edges outside of VL on adjMatrix_graph
         for (auto &p : adjMatrix_graph[v])
@@ -562,16 +562,19 @@ int Graph::kMas(int &prevNode, const int currNNode)
 
             for (auto &p : adjMatrix_kcut[MA])
             {
-                WTYPE weightTmp = p.second;
+
                 int node = p.first;
+                if (uStats[node] == 2)
+                {
+                    continue;
+                }
+                WTYPE weightTmp = p.second;
                 if (uStats[node] == 1)
                 {
-                    // cout << node << "-" << MA << endl;
                     currCut -= weightTmp;
                 }
                 else if (uStats[node] == 0)
                 {
-                    // cout << node << "+" << MA << endl;
                     currCut += weightTmp;
                     if (u2wL[node] > 0)
                         wL2u->delEle(node + 1);
@@ -579,20 +582,6 @@ int Graph::kMas(int &prevNode, const int currNNode)
                     u2wL[node] += weightTmp;
                     wL2u->insert(u2wL[node], node + 1);
                 }
-                // if (L.count(node))
-                // {
-                //     if (!u2wL[node])
-                //         currCut -= weightTmp;
-                // }
-                // else
-                // {
-                //     currCut += weightTmp;
-                //     if (u2wL[node] > 0)
-                //         wL2u->delEle(node + 1);
-
-                //     u2wL[node] += weightTmp;
-                //     wL2u->insert(u2wL[node], node + 1);
-                // }
             }
         }
         for (auto &MA : toAdd)
@@ -650,12 +639,16 @@ int Graph::mergeNodes()
         // add to v
         if (weight == 0 || node == v)
             continue;
-        int tmpweight = (adjMatrix_kcut[v][node] += weight);
-        if (tmpweight >= K && forceC)
-            UFAfterMerge.recordMerge(v, node);
 
         adjMatrix_kcut[node].erase(u);
-        adjMatrix_kcut[node][v] += weight;
+        if (UFAfterMerge.findParentsAfterMerge(v) != UFAfterMerge.findParentsAfterMerge(node))
+        {
+            int tmpweight = (adjMatrix_kcut[v][node] += weight);
+            if (tmpweight >= K && forceC)
+                UFAfterMerge.recordMerge(v, node);
+
+            adjMatrix_kcut[node][v] += weight;
+        }
     }
     adjMatrix_kcut[u].clear();
     return v;

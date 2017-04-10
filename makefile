@@ -2,16 +2,18 @@ UNAME := $(shell uname)
 
 
 ifeq ($(UNAME), Linux)
-    CC=clang++
-    LFLAGS =
+    CC=g++-4.8
+    LFLAGS = 
+    CFLAGS =  -O2 -std=c++11 -I"include"
     TESTFILE=
 endif
 ifeq ($(UNAME), Darwin)
     CC=g++-6
     LFLAGS = -I"include"
+    CFLAGS =  -O2 -std=c++11 -I"include" 
     TESTFILE=
 endif
-CFLAGS =  -O2 -std=c++11 -I"include" 
+
 
 CPP_FILES := $(wildcard src/*.cpp)
 OBJ_DIR := obj
