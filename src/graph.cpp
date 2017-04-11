@@ -86,13 +86,23 @@ Graph::Graph(vector<vector<int>> _edges)
     nNodes = 0;
     for (auto &v : _edges)
     {
-        nNodes = max(nNodes, v[0]);
-        nNodes = max(nNodes, v[1]);
+        for (auto &s : v)
+            nNodes = max(nNodes, s);
     }
     nNodes++;
     preallocate();
-    for (auto &t : _edges)
-        addEdge(t[0], t[1]);
+
+    bool isTensor = (_edges[0].size() == 3);
+    if (!isTensor)
+        for (auto &t : _edges)
+            addEdge(t[0], t[1]);
+    else
+        for (auto &t : _edges)
+        {
+            addEdge(t[0], t[1], 0.5);
+            addEdge(t[0], t[2], 0.5);
+            addEdge(t[2], t[1], 0.5);
+        }
 
     if (verbose)
         cout << "Time for Construct the graph: " << tm.CheckTimer() << endl;
@@ -104,15 +114,31 @@ Graph::Graph(string filename)
     fstream fin;
     fin.open(filename.c_str());
     int nedge = 0;
-    fin >> nNodes >> nedge;
-    preallocate();
+    fin >> nNodes;
+    bool isTensor = (nNodes == 3);
+    if (isTensor)
+        fin >> nNodes >> nedge;
+    else
+        fin >> nedge;
 
-    for (int i = 0; i < nedge; i++)
-    {
-        int u, v;
-        fin >> u >> v;
-        addEdge(u, v);
-    }
+    preallocate();
+    if (isTensor)
+        for (int i = 0; i < nedge; i++)
+        {
+            int u, v, s;
+            fin >> u >> v >> s;
+            addEdge(u, v, 0.5);
+            addEdge(u, s, 0.5);
+            addEdge(s, v, 0.5);
+        }
+    else
+        for (int i = 0; i < nedge; i++)
+        {
+            int u, v;
+            fin >> u >> v;
+            addEdge(u, v);
+        }
+
     fin.close();
     return;
 }

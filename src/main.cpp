@@ -23,6 +23,8 @@ int main(int argc, char **argv)
     Timer tm;
     g.forceC = stoi(argv[4]);
     g.batchM = stoi(argv[5]);
+
+    // g.printGraph();
     g.getKCC((WTYPE)stof(argv[3]));
 
     cout << getDataName(string(argv[1])) << "\t";
@@ -45,12 +47,12 @@ int main(int argc, char **argv)
     cout << g.kCC.size() << endl;
     for (auto &v : g.kCC)
     {
-        cout << v[0] << endl;
-        for (auto &i : v)
-        {
-            cout << i << " ";
-        }
-        cout << endl;
+        cout << v.size() << endl;
+        // for (auto &i : v)
+        // {
+        //     cout << i << " ";
+        // }
+        // cout << endl;
     }
     cout << "Time for merge:\t" << g.timeForMerge << endl;
     cout << "Time for kMas:\t" << g.timeForKMas << endl;
